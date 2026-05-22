@@ -123,7 +123,7 @@ select {
   font-weight: 700;
 }
 
-.location-form div {
+.location-input-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
@@ -152,6 +152,51 @@ select {
 
 .location-form button:hover {
   background: #324239;
+}
+
+.suggestion-panel {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid #d8d2c4;
+  border-radius: 8px;
+  background: #fffdf7;
+}
+
+.suggestion-option {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #e3ddd1;
+  border-radius: 0;
+  background: transparent;
+  color: #1f2923;
+  text-align: left;
+}
+
+.suggestion-option:last-child {
+  border-bottom: 0;
+}
+
+.suggestion-option:hover,
+.suggestion-option:focus-visible {
+  background: #f4f1ea;
+}
+
+.suggestion-option span {
+  font-weight: 700;
+}
+
+.suggestion-option small,
+.suggestion-helper {
+  color: #687568;
+  font-size: 0.86rem;
+}
+
+.suggestion-helper {
+  margin: 0;
+  padding: 12px 14px;
 }
 
 .status-good {
@@ -341,7 +386,7 @@ code {
 
   .hero,
   .condition-card,
-  .location-form div {
+  .location-input-row {
     grid-template-columns: 1fr;
   }
 

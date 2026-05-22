@@ -10,6 +10,17 @@ export type AlertSeverity =
 export type ClimbLocation = {
   query: string;
   label: string;
+  latitude?: number;
+  longitude?: number;
+};
+
+export type ClimbLocationSuggestion = {
+  id: string;
+  query: string;
+  label: string;
+  detail: string;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 export type ForecastPeriod = {

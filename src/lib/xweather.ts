@@ -1,6 +1,7 @@
 import type {
   AlertSeverity,
   ClimbLocation,
+  ClimbLocationSuggestion,
   ClimbWeather,
   ForecastPeriod,
   WeatherAlert,
@@ -66,8 +67,57 @@ type ThreatsResponse = Array<{
   }>;
 }>;
 
+type PlacesResponse = Array<{
+  loc?: {
+    lat?: number;
+    long?: number;
+  };
+  place?: {
+    name?: string;
+    state?: string;
+    stateFull?: string;
+    country?: string;
+    countryFull?: string;
+  };
+  profile?: {
+    code?: string;
+    tz?: string;
+  };
+}>;
+
 const BASE_URL = "https://data.api.xweather.com";
 const NEXT_HOURS = 6;
+const SUGGESTION_LIMIT = 5;
+
+export async function searchClimbLocations(
+  query: string,
+): Promise<ClimbLocationSuggestion[]> {
+  const trimmedQuery = query.trim();
+  const clientId = import.meta.env.VITE_XWEATHER_CLIENT_ID as string | undefined;
+  const clientSecret = import.meta.env.VITE_XWEATHER_CLIENT_SECRET as
+    | string
+    | undefined;
+  const useMockWeather = import.meta.env.VITE_USE_MOCK_WEATHER === "true";
+
+  if (trimmedQuery.length < 2) {
+    return [];
+  }
+
+  if (useMockWeather || !clientId || !clientSecret) {
+    return getMockLocationSuggestions(trimmedQuery);
+  }
+
+  const data = await fetchOptionalEndpoint<PlacesResponse>(
+    "/places/search",
+    { clientId, clientSecret },
+    {
+      query: `name:^${trimmedQuery}`,
+      limit: String(SUGGESTION_LIMIT),
+    },
+  );
+
+  return normalizePlaces(data.response, trimmedQuery);
+}
 
 export async function fetchClimbWeather(
   location: ClimbLocation,
@@ -314,4 +364,69 @@ export function getMockClimbWeather(
       usedMockFallback,
     },
   };
+}
+
+function normalizePlaces(
+  response: PlacesResponse | undefined,
+  fallbackQuery: string,
+): ClimbLocationSuggestion[] {
+  return (response ?? [])
+    .map((place, index) => {
+      const name = place.place?.name ?? fallbackQuery;
+      const region = place.place?.state || place.place?.stateFull;
+      const country = place.place?.country || place.place?.countryFull;
+      const label = [name, region, country].filter(Boolean).join(", ");
+      const detail = [place.place?.stateFull, place.place?.countryFull, place.profile?.tz]
+        .filter(Boolean)
+        .join(" - ");
+
+      return {
+        id: place.profile?.code ?? `${label}-${index}`,
+        query: label,
+        label,
+        detail: detail || "Xweather place result",
+        latitude: place.loc?.lat ?? null,
+        longitude: place.loc?.long ?? null,
+      };
+    })
+    .filter((suggestion) => suggestion.label.length > 0);
+}
+
+function getMockLocationSuggestions(query: string): ClimbLocationSuggestion[] {
+  const examples = [
+    {
+      label: "Taylors Falls, MN, US",
+      detail: "Minnesota - United States - mock result",
+      latitude: 45.3992,
+      longitude: -92.6517,
+    },
+    {
+      label: "Red River Gorge, KY, US",
+      detail: "Kentucky - United States - mock result",
+      latitude: 37.8233,
+      longitude: -83.6287,
+    },
+    {
+      label: "Boulder, CO, US",
+      detail: "Colorado - United States - mock result",
+      latitude: 40.015,
+      longitude: -105.2705,
+    },
+    {
+      label: "Joshua Tree, CA, US",
+      detail: "California - United States - mock result",
+      latitude: 34.1347,
+      longitude: -116.3131,
+    },
+  ];
+  const normalizedQuery = query.toLowerCase();
+
+  return examples
+    .filter((example) => example.label.toLowerCase().includes(normalizedQuery))
+    .slice(0, SUGGESTION_LIMIT)
+    .map((example, index) => ({
+      id: `mock-${index}-${example.label}`,
+      query: example.label,
+      ...example,
+    }));
 }
