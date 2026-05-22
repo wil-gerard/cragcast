@@ -2,11 +2,16 @@ import { appCopy } from "../data/sampleLocation";
 import type { ClimbingConditionScore, ClimbWeather } from "../types/weather";
 
 type ConditionCardProps = {
+  isRefreshing?: boolean;
   score: ClimbingConditionScore;
   weather: ClimbWeather;
 };
 
-export function ConditionCard({ score, weather }: ConditionCardProps) {
+export function ConditionCard({
+  isRefreshing = false,
+  score,
+  weather,
+}: ConditionCardProps) {
   return (
     <section className={`condition-card status-${score.status.toLowerCase().replaceAll(" ", "-")}`}>
       <div>
@@ -17,6 +22,7 @@ export function ConditionCard({ score, weather }: ConditionCardProps) {
       <div className="condition-meta">
         <span>{formatObservedTime(weather.observedAtISO)}</span>
         <span>{weather.meta.source === "mock" ? "Mock data" : "Live Xweather data"}</span>
+        {isRefreshing && <span>Updating...</span>}
       </div>
       <p className="disclaimer">{appCopy.disclaimer}</p>
     </section>

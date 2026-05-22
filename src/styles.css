@@ -301,6 +301,87 @@ code {
   padding: 13px 14px;
 }
 
+.search-status {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 24px;
+  margin-top: 10px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  opacity: 0;
+}
+
+.search-status[data-visible="true"] {
+  opacity: 1;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--mono-accent);
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+
+.status-ellipsis {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  margin-left: 1px;
+}
+
+.status-ellipsis span {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: status-dot-wave 1.2s ease-in-out infinite;
+}
+
+.status-ellipsis span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.status-ellipsis span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes status-dot-wave {
+  0%,
+  80%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(0);
+  }
+
+  40% {
+    opacity: 0.95;
+    transform: translateY(-3px);
+  }
+}
+
+.results-region {
+  position: relative;
+  min-height: 980px;
+}
+
 .status-good {
   border-left-color: var(--green);
 }
@@ -501,7 +582,21 @@ code {
 }
 
 .loading-panel {
-  min-height: 220px;
+  min-height: 980px;
+}
+
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.loading-grid span {
+  min-height: 96px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card-muted);
 }
 
 @media (max-width: 1160px) {
@@ -536,5 +631,18 @@ code {
 
   .factor-grid {
     grid-template-columns: 1fr;
+  }
+
+  .results-region,
+  .loading-panel {
+    min-height: 1120px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot,
+  .status-ellipsis span {
+    animation: none;
   }
 }

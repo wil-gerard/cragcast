@@ -11,7 +11,8 @@ import { fetchClimbWeather, getMockClimbWeather } from "./lib/xweather";
 import type { ClimbLocation, ClimbWeather } from "./types/weather";
 
 type LoadState =
-  | { status: "loading"; weather: null; error: null }
+  | { status: "idle"; weather: null; error: null }
+  | { status: "loading"; weather: ClimbWeather | null; error: null }
   | { status: "ready"; weather: ClimbWeather; error: null }
   | { status: "error"; weather: ClimbWeather; error: string };
 
@@ -20,7 +21,7 @@ export default function App() {
   const [selectedLocation, setSelectedLocation] =
     useState<ClimbLocation>(defaultClimbLocation);
   const [state, setState] = useState<LoadState>({
-    status: "loading",
+    status: "idle",
     weather: null,
     error: null,
   });
@@ -28,7 +29,11 @@ export default function App() {
   useEffect(() => {
     let isMounted = true;
 
-    setState({ status: "loading", weather: null, error: null });
+    setState((currentState) => ({
+      status: "loading",
+      weather: currentState.weather,
+      error: null,
+    }));
 
     fetchClimbWeather(selectedLocation)
       .then((weather) => {
@@ -55,6 +60,8 @@ export default function App() {
   }, [selectedLocation]);
 
   const weather = state.weather;
+  const isInitialLoading = state.status === "loading" && !weather;
+  const isRefreshing = state.status === "loading" && Boolean(weather);
   const score = useMemo(
     () => (weather ? getClimbingConditionScore(weather) : null),
     [weather],
@@ -84,10 +91,32 @@ export default function App() {
         onSelectLocation={setSelectedLocation}
       />
 
-      {state.status === "loading" && (
+      <div className="search-status" aria-live="polite" data-visible={isRefreshing}>
+        {isRefreshing ? (
+          <>
+            <span className="status-dot" aria-hidden="true" />
+            Checking {selectedLocation.label}
+            <span className="status-ellipsis" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+          </>
+        ) : (
+          <span aria-hidden="true">&nbsp;</span>
+        )}
+      </div>
+
+      {isInitialLoading && (
         <section className="loading-panel">
           <p className="eyebrow">Loading</p>
           <h2>Checking conditions for {selectedLocation.label}...</h2>
+          <div className="loading-grid" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
         </section>
       )}
 
@@ -99,8 +128,9 @@ export default function App() {
       )}
 
       {weather && score && (
-        <>
+        <section className="results-region" aria-busy={isRefreshing}>
           <ConditionCard
+            isRefreshing={isRefreshing}
             score={score}
             weather={weather}
           />
@@ -108,7 +138,7 @@ export default function App() {
           <WeatherFactorGrid weather={weather} />
           <WhyThisRating score={score} />
           <DeveloperNotes />
-        </>
+        </section>
       )}
     </main>
   );
