@@ -16,6 +16,11 @@ type XweatherEnvelope<T> = {
   response?: T;
 };
 
+type PhrasesEnvelope = {
+  response?: string;
+  detail?: string;
+};
+
 type ObservationResponse = {
   ob?: {
     dateTimeISO?: string;
@@ -86,6 +91,7 @@ type PlacesResponse = Array<{
 }>;
 
 const BASE_URL = "https://data.api.xweather.com";
+const PHRASES_BASE_URL = "https://phrases.api.xweather.com";
 const NEXT_HOURS = 6;
 const SUGGESTION_LIMIT = 5;
 
@@ -159,6 +165,8 @@ export async function fetchClimbWeather(
     fetchOptionalEndpoint<ThreatsResponse>(`/threats/${encodedLocation}`, auth),
   ]);
 
+  const phraseSummary = await fetchOptionalPhrasesSummary(encodedLocation, auth);
+
   const forecastNextHours = normalizeForecast(forecast.response);
   const normalizedThreats = normalizeThreats(threats.response, forecastNextHours);
 
@@ -175,6 +183,7 @@ export async function fetchClimbWeather(
     recentPrecip: normalizeRecentPrecip(summary.response),
     alerts: normalizeAlerts(alerts.response),
     threats: normalizedThreats,
+    phraseSummary,
     meta: {
       source: "live",
       usedMockFallback: false,
@@ -220,6 +229,43 @@ async function fetchOptionalEndpoint<T>(
     return await fetchEndpoint<T>(path, auth, params);
   } catch {
     return { success: false, response: undefined } satisfies XweatherEnvelope<T>;
+  }
+}
+
+async function fetchOptionalPhrasesSummary(
+  encodedLocation: string,
+  auth: { clientId: string; clientSecret: string },
+) {
+  try {
+    const url = new URL(`${PHRASES_BASE_URL}/conditions/${encodedLocation}`);
+    url.searchParams.set("client_id", auth.clientId);
+    url.searchParams.set("client_secret", auth.clientSecret);
+    url.searchParams.set("stream", "false");
+    url.searchParams.set("units", "imperial");
+    url.searchParams.set("language", "en");
+    url.searchParams.set("personality", "default");
+    url.searchParams.set("filter", "1hr");
+    url.searchParams.set("limit", String(NEXT_HOURS));
+
+    const response = await fetch(url);
+    const data = (await response.json()) as PhrasesEnvelope;
+
+    if (!response.ok || !data.response) {
+      return {
+        text: null,
+        source: "unavailable" as const,
+      };
+    }
+
+    return {
+      text: data.response,
+      source: "phrases" as const,
+    };
+  } catch {
+    return {
+      text: null,
+      source: "unavailable" as const,
+    };
   }
 }
 
@@ -357,6 +403,11 @@ export function getMockClimbWeather(
     threats: {
       lightningOrThunderstormRisk: false,
       summary: "No lightning or thunderstorm threat in mock data.",
+      source: "mock",
+    },
+    phraseSummary: {
+      text:
+        "Mock summary: Conditions look comfortable overall, but a later chance of rain and recent moisture could leave rock damp. Treat this as weather context, not a safety clearance.",
       source: "mock",
     },
     meta: {

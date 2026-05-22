@@ -56,6 +56,10 @@ export type ClimbWeather = {
     summary: string | null;
     source: "threats" | "forecast" | "mock" | "unavailable";
   };
+  phraseSummary: {
+    text: string | null;
+    source: "phrases" | "mock" | "unavailable";
+  };
   meta: {
     source: "live" | "mock";
     usedMockFallback: boolean;

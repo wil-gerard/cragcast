@@ -3,6 +3,7 @@ import { ConditionCard } from "./components/ConditionCard";
 import { DeveloperNotes } from "./components/DeveloperNotes";
 import { LocationSearch } from "./components/LocationSearch";
 import { WeatherFactorGrid } from "./components/WeatherFactorGrid";
+import { WeatherSummary } from "./components/WeatherSummary";
 import { WhyThisRating } from "./components/WhyThisRating";
 import { appCopy, defaultClimbLocation } from "./data/sampleLocation";
 import { getClimbingConditionScore } from "./lib/climbingScore";
@@ -99,6 +100,7 @@ export default function App() {
             score={score}
             weather={weather}
           />
+          <WeatherSummary weather={weather} />
           <WeatherFactorGrid weather={weather} />
           <WhyThisRating score={score} />
           <DeveloperNotes />

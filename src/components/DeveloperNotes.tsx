@@ -11,7 +11,8 @@ export function DeveloperNotes() {
           <p>
             The app normalizes current observations, hourly forecast periods,
             active alerts, recent precipitation summaries, and optional threats
-            data for the submitted location into one UI-friendly weather object.
+            and Phrases API data for the submitted location into one UI-friendly
+            weather object.
           </p>
         </div>
         <div>
@@ -19,7 +20,8 @@ export function DeveloperNotes() {
           <p>
             <code>getClimbingConditionScore</code> is a pure TypeScript function.
             It checks severe alerts, lightning risk, rain, recent precipitation,
-            wind, and temperature with deliberately readable thresholds.
+            wind, and temperature with deliberately readable thresholds. The
+            Phrases summary is context only, not an input to the score.
           </p>
         </div>
         <div>
