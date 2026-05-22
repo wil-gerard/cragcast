@@ -64,13 +64,17 @@ export default function App() {
     <main className="app-shell">
       <header className="hero">
         <div>
+          <div className="brand-row">
+            <strong>{appCopy.name}</strong>
+            <span>API demo</span>
+          </div>
           <p className="eyebrow">Location-based climbing weather</p>
-          <h1>{appCopy.name}</h1>
+          <h1>Climb score for any location</h1>
           <p>{appCopy.subtitle}</p>
         </div>
         <div className="api-badge">
           <span>Xweather starter</span>
-          <strong>One-page demo</strong>
+          <strong>React + TypeScript</strong>
         </div>
       </header>
 
