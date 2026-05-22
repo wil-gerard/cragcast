@@ -1,20 +1,13 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ConditionCard } from "./components/ConditionCard";
 import { DeveloperNotes } from "./components/DeveloperNotes";
+import { LocationSearch } from "./components/LocationSearch";
 import { WeatherFactorGrid } from "./components/WeatherFactorGrid";
 import { WhyThisRating } from "./components/WhyThisRating";
 import { appCopy, defaultClimbLocation } from "./data/sampleLocation";
 import { getClimbingConditionScore } from "./lib/climbingScore";
-import {
-  fetchClimbWeather,
-  getMockClimbWeather,
-  searchClimbLocations,
-} from "./lib/xweather";
-import type {
-  ClimbLocation,
-  ClimbLocationSuggestion,
-  ClimbWeather,
-} from "./types/weather";
+import { fetchClimbWeather, getMockClimbWeather } from "./lib/xweather";
+import type { ClimbLocation, ClimbWeather } from "./types/weather";
 
 type LoadState =
   | { status: "loading"; weather: null; error: null }
@@ -22,14 +15,9 @@ type LoadState =
   | { status: "error"; weather: ClimbWeather; error: string };
 
 export default function App() {
-  const [locationInput, setLocationInput] = useState(defaultClimbLocation.query);
+  const [locationInput, setLocationInput] = useState("");
   const [selectedLocation, setSelectedLocation] =
     useState<ClimbLocation>(defaultClimbLocation);
-  const [suggestions, setSuggestions] = useState<ClimbLocationSuggestion[]>([]);
-  const [suggestionStatus, setSuggestionStatus] = useState<
-    "idle" | "loading" | "ready" | "error"
-  >("idle");
-  const [isSuggestionListOpen, setIsSuggestionListOpen] = useState(false);
   const [state, setState] = useState<LoadState>({
     status: "loading",
     weather: null,
@@ -65,66 +53,6 @@ export default function App() {
     };
   }, [selectedLocation]);
 
-  useEffect(() => {
-    const trimmedLocation = locationInput.trim();
-
-    if (trimmedLocation.length < 2) {
-      setSuggestions([]);
-      setSuggestionStatus("idle");
-      return;
-    }
-
-    let isMounted = true;
-    setSuggestionStatus("loading");
-
-    const timeout = window.setTimeout(() => {
-      searchClimbLocations(trimmedLocation)
-        .then((results) => {
-          if (isMounted) {
-            setSuggestions(results);
-            setSuggestionStatus("ready");
-          }
-        })
-        .catch(() => {
-          if (isMounted) {
-            setSuggestions([]);
-            setSuggestionStatus("error");
-          }
-        });
-    }, 250);
-
-    return () => {
-      isMounted = false;
-      window.clearTimeout(timeout);
-    };
-  }, [locationInput]);
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const trimmedLocation = locationInput.trim();
-
-    if (!trimmedLocation) {
-      return;
-    }
-
-    setSelectedLocation({
-      query: trimmedLocation,
-      label: trimmedLocation,
-    });
-    setIsSuggestionListOpen(false);
-  }
-
-  function handleSuggestionSelect(suggestion: ClimbLocationSuggestion) {
-    setLocationInput(suggestion.label);
-    setSelectedLocation({
-      query: suggestion.query,
-      label: suggestion.label,
-      latitude: suggestion.latitude ?? undefined,
-      longitude: suggestion.longitude ?? undefined,
-    });
-    setIsSuggestionListOpen(false);
-  }
-
   const weather = state.weather;
   const score = useMemo(
     () => (weather ? getClimbingConditionScore(weather) : null),
@@ -145,53 +73,11 @@ export default function App() {
         </div>
       </header>
 
-      <form className="location-form" onSubmit={handleSubmit}>
-        <label htmlFor="location">Climb location</label>
-        <div className="location-input-row">
-          <input
-            id="location"
-            name="location"
-            placeholder="Try: Red River Gorge, KY"
-            value={locationInput}
-            autoComplete="off"
-            onChange={(event) => {
-              setLocationInput(event.target.value);
-              setIsSuggestionListOpen(true);
-            }}
-            onFocus={() => setIsSuggestionListOpen(true)}
-          />
-          <button type="submit">Score climb</button>
-        </div>
-        {isSuggestionListOpen && locationInput.trim().length >= 2 && (
-          <div className="suggestion-panel">
-            {suggestionStatus === "loading" && (
-              <p className="suggestion-helper">Searching places...</p>
-            )}
-            {suggestionStatus === "error" && (
-              <p className="suggestion-helper">
-                Suggestions are unavailable. You can still submit this location.
-              </p>
-            )}
-            {suggestionStatus === "ready" && suggestions.length === 0 && (
-              <p className="suggestion-helper">
-                No suggestions found. Press Enter to score this location.
-              </p>
-            )}
-            {suggestions.map((suggestion) => (
-              <button
-                className="suggestion-option"
-                key={suggestion.id}
-                type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => handleSuggestionSelect(suggestion)}
-              >
-                <span>{suggestion.label}</span>
-                <small>{suggestion.detail}</small>
-              </button>
-            ))}
-          </div>
-        )}
-      </form>
+      <LocationSearch
+        value={locationInput}
+        onValueChange={setLocationInput}
+        onSelectLocation={setSelectedLocation}
+      />
 
       {state.status === "loading" && (
         <section className="loading-panel">

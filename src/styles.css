@@ -129,6 +129,10 @@ select {
   gap: 10px;
 }
 
+.location-combobox {
+  position: relative;
+}
+
 .location-form input {
   width: 100%;
   min-height: 44px;
@@ -157,9 +161,21 @@ select {
 .suggestion-panel {
   display: grid;
   overflow: hidden;
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
   border: 1px solid #d8d2c4;
   border-radius: 8px;
   background: #fffdf7;
+  box-shadow: 0 12px 30px rgb(31 41 35 / 12%);
+}
+
+.suggestion-panel[hidden],
+.suggestion-panel[aria-hidden="true"],
+.suggestion-panel[data-closed] {
+  display: none !important;
 }
 
 .suggestion-option {
@@ -173,6 +189,7 @@ select {
   background: transparent;
   color: #1f2923;
   text-align: left;
+  cursor: pointer;
 }
 
 .suggestion-option:last-child {
@@ -180,7 +197,8 @@ select {
 }
 
 .suggestion-option:hover,
-.suggestion-option:focus-visible {
+.suggestion-option:focus-visible,
+.suggestion-option[data-focus] {
   background: #f4f1ea;
 }
 
