@@ -85,7 +85,7 @@ The goal is explainable starter logic, not a definitive safety model.
 Install dependencies:
 
 ```bash
-npm install
+pnpm install
 ```
 
 Create a local environment file:
@@ -105,13 +105,13 @@ VITE_USE_MOCK_WEATHER=false
 Start the app:
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Build for production:
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ## Mock mode
