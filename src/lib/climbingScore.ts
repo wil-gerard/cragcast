@@ -33,13 +33,13 @@ export function getClimbingConditionScore(
 
   if (rainExpected) {
     reasons.push(
-      "Rain is possible in the next 6 hours, which can make exposed rock slick.",
+      "Rain is expected in the next 6 hours. Wet rock dramatically reduces friction and makes climbing unsafe.",
     );
   }
 
   if (recentRain) {
     reasons.push(
-      "Recent precipitation may leave rock damp even if the current weather looks fine.",
+      "Recent precipitation may leave rock damp even if current conditions look fine.",
     );
   }
 
@@ -55,29 +55,20 @@ export function getClimbingConditionScore(
     );
   }
 
-  if (activeSevereAlert || input.threats.lightningOrThunderstormRisk) {
+  if (activeSevereAlert || input.threats.lightningOrThunderstormRisk || rainExpected) {
     return {
       status: "No Go",
       headline:
-        "No Go: Active severe weather or lightning risk makes this a poor time to climb.",
+        "No Go: Rain, severe weather, or lightning risk makes this a poor time to climb.",
       reasons: limitReasons(reasons),
     };
   }
 
-  if (highWind || uncomfortableTemp) {
+  if (recentRain || highWind || uncomfortableTemp) {
     return {
       status: "Caution",
       headline:
         "Caution: Some weather factors are outside the preferred range for climbing.",
-      reasons: limitReasons(reasons),
-    };
-  }
-
-  if (rainExpected || recentRain) {
-    return {
-      status: "Maybe",
-      headline:
-        "Maybe: Conditions may be usable, but moisture could affect the rock.",
       reasons: limitReasons(reasons),
     };
   }
