@@ -62,13 +62,13 @@ type AlertsResponse = Array<{
 
 type ThreatsResponse = Array<{
   periods?: Array<{
-    threat?: {
-      phrase?: string;
-      type?: string;
-      risk?: string;
-    };
-    phrase?: string;
-    weather?: string;
+    storms?: {
+      lightning?: {
+        nearby?: number;
+        approaching?: number;
+        phrase?: string;
+      } | null;
+    } | null;
   }>;
 }>;
 
@@ -159,10 +159,9 @@ export async function fetchClimbWeather(
     fetchOptionalEndpoint<AlertsResponse>(`/alerts/${encodedLocation}`, auth, {
       limit: "10",
     }),
-    // TODO: Some Xweather threat/lightning data may require subscription access.
-    // The UI consumes a normalized optional shape so a server-side proxy or
-    // account-specific endpoint can be swapped in without touching components.
-    fetchOptionalEndpoint<ThreatsResponse>(`/threats/${encodedLocation}`, auth),
+    fetchEndpoint<ThreatsResponse>(`/threats/${encodedLocation}`, auth).catch(() => {
+      return { success: false, response: undefined } satisfies XweatherEnvelope<ThreatsResponse>;
+    }),
   ]);
 
   const phraseSummary = await fetchOptionalPhrasesSummary(encodedLocation, auth);
@@ -313,29 +312,34 @@ function normalizeThreats(
   response: ThreatsResponse | undefined,
   forecastNextHours: ForecastPeriod[],
 ) {
-  const threatPhrase = response
-    ?.flatMap((item) => item.periods ?? [])
-    .map((period) => period.threat?.phrase ?? period.phrase ?? period.weather)
-    .find(Boolean);
-  const lightningFromThreats = hasStormLanguage(threatPhrase);
-  const lightningFromForecast = forecastNextHours.some(
-    (period) => period.hasThunderstormRisk,
-  );
+  const periods = response?.flatMap((item) => item.periods ?? []) ?? [];
+  const lightningPeriod = periods
+    .map((p) => p.storms?.lightning)
+    .find((l) => l && ((l.nearby ?? 0) > 0 || (l.approaching ?? 0) > 0));
+  const lightningPhrase = lightningPeriod?.phrase ?? null;
+  const lightningFromThreats = Boolean(lightningPeriod);
+  const lightningFromForecast = forecastNextHours.some((p) => p.hasThunderstormRisk);
 
-  if (response && threatPhrase) {
+  if (response !== undefined && lightningFromThreats) {
     return {
-      lightningOrThunderstormRisk: lightningFromThreats || lightningFromForecast,
-      summary: threatPhrase,
+      lightningOrThunderstormRisk: true,
+      summary: lightningPhrase ?? "Lightning activity detected near this location.",
       source: "threats" as const,
     };
   }
+
+  const endpointResponded = response !== undefined;
 
   return {
     lightningOrThunderstormRisk: lightningFromForecast,
     summary: lightningFromForecast
       ? "Thunderstorm language appears in the hourly forecast."
       : null,
-    source: lightningFromForecast ? ("forecast" as const) : ("unavailable" as const),
+    source: lightningFromForecast
+      ? ("forecast" as const)
+      : endpointResponded
+        ? ("threats" as const)
+        : ("unavailable" as const),
   };
 }
 
@@ -432,10 +436,10 @@ function normalizePlaces(
         .join(" - ");
 
       return {
-        id: place.profile?.code ?? `${label}-${index}`,
+        id: `${place.profile?.code ?? label}-${index}`,
         query: label,
         label,
-        detail: detail || "Xweather place result",
+        detail: detail || label,
         latitude: place.loc?.lat ?? null,
         longitude: place.loc?.long ?? null,
       };
