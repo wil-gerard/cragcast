@@ -39,7 +39,9 @@ export function WeatherFactorGrid({ weather }: WeatherFactorGridProps) {
     {
       label: "Lightning risk",
       value: weather.threats.lightningOrThunderstormRisk ? "Flagged" : "Not flagged",
-      note: weather.threats.summary ?? sourceLabel(weather.threats.source),
+      note: weather.threats.lightningOrThunderstormRisk
+        ? (weather.threats.summary ?? "Flagged in forecast data")
+        : "No thunderstorm activity detected in available data",
     },
   ];
 
@@ -71,8 +73,8 @@ function formatRecentPrecip(precip: ClimbWeather["recentPrecip"]) {
 }
 
 function sourceLabel(source: string) {
-  if (source === "unavailable") return "Endpoint unavailable or not included";
-  if (source === "mock") return "Mock starter data";
+  if (source === "unavailable") return "Not available for this location";
+  if (source === "mock") return "Estimated — live data not available";
   if (source === "forecast") return "Inferred from hourly forecast";
-  return "Xweather data";
+  return "From weather data";
 }

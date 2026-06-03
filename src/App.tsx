@@ -49,7 +49,7 @@ export default function App() {
             error:
               error instanceof Error
                 ? error.message
-                : "Unable to load Xweather data.",
+                : "Unable to load weather data.",
           });
         }
       });
@@ -73,15 +73,10 @@ export default function App() {
         <div>
           <div className="brand-row">
             <strong>{appCopy.name}</strong>
-            <span>API demo</span>
           </div>
           <p className="eyebrow">Location-based climbing weather</p>
           <h1>Climb score for any location</h1>
           <p>{appCopy.subtitle}</p>
-        </div>
-        <div className="api-badge">
-          <span>Xweather starter</span>
-          <strong>React + TypeScript</strong>
         </div>
       </header>
 
@@ -122,8 +117,8 @@ export default function App() {
 
       {state.error && (
         <section className="notice" role="status">
-          Live Xweather data could not be loaded, so the app is showing mock
-          starter data. {state.error}
+          Live weather data could not be loaded — showing estimated conditions
+          instead. {state.error}
         </section>
       )}
 
@@ -134,9 +129,9 @@ export default function App() {
             score={score}
             weather={weather}
           />
+          <WhyThisRating score={score} />
           <WeatherSummary weather={weather} />
           <WeatherFactorGrid weather={weather} />
-          <WhyThisRating score={score} />
           <DeveloperNotes />
         </section>
       )}
